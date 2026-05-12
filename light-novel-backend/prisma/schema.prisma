@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== MODELS CHÍNH ====================
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  avatar    String?
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart      Cart?
+  orders    Order[]
+  reviews   Review[]
+  behaviors UserBehavior[]
+}
+
+model Author {
+  id    Int     @id @default(autoincrement())
+  name  String  @unique
+  bio   String?
+  books Book[]
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  books Book[]
+}
+
+model Publisher {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  books Book[]
+}
+
+model Tag {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  books Book[] @relation("BookTags")
+}
+
+model Book {
+  id          Int        @id @default(autoincrement())
+  title       String
+  slug        String     @unique
+  description String?
+  price       Float
+  image       String?
+  stock       Int        @default(50)
+  pageCount   Int?
+  rating      Float?     @default(0)
+  status      BookStatus @default(IN_STOCK)
+
+  authorId    Int
+  categoryId  Int
+  publisherId Int?
+
+  author    Author     @relation(fields: [authorId], references: [id])
+  category  Category   @relation(fields: [categoryId], references: [id])
+  publisher Publisher? @relation(fields: [publisherId], references: [id])
+
+  tags Tag[] @relation("BookTags")
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+  reviews    Review[]
+  behaviors  UserBehavior[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Cart {
+  id        Int        @id @default(autoincrement())
+  userId    Int        @unique
+  user      User       @relation(fields: [userId], references: [id])
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id       Int @id @default(autoincrement())
+  cartId   Int
+  bookId   Int
+  quantity Int @default(1)
+
+  cart Cart @relation(fields: [cartId], references: [id])
+  book Book @relation(fields: [bookId], references: [id])
+
+  @@unique([cartId, bookId])
+}
+
+model Order {
+  id              Int         @id @default(autoincrement())
+  userId          Int
+  totalAmount     Float
+  status          OrderStatus @default(PENDING)
+  paymentMethod   String      @default("cod")
+  shippingAddress String?
+  note            String?
+
+  user      User        @relation(fields: [userId], references: [id])
+  items     OrderItem[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model OrderItem {
+  id       Int   @id @default(autoincrement())
+  orderId  Int
+  bookId   Int
+  quantity Int
+  price    Float // Giá tại thời điểm mua
+
+  order Order @relation(fields: [orderId], references: [id])
+  book  Book  @relation(fields: [bookId], references: [id])
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  bookId    Int
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  book Book @relation(fields: [bookId], references: [id])
+
+  @@unique([userId, bookId])
+}
+
+model UserBehavior {
+  id        Int            @id @default(autoincrement())
+  userId    Int
+  bookId    Int
+  action    BehaviorAction
+  timestamp DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  book Book @relation(fields: [bookId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum BookStatus {
+  IN_STOCK
+  OUT_OF_STOCK
+  COMING_SOON
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPING
+  DELIVERED
+  CANCELLED
+}
+
+enum BehaviorAction {
+  VIEW
+  ADD_TO_CART
+  PURCHASE
+  RATE
+}
