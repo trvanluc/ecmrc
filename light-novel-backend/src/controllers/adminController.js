@@ -87,6 +87,85 @@ const updateUserRole = async (req, res) => {
   res.json({ success: true, message: "Cập nhật vai trò thành công", data: user });
 };
 
+const getCategories = async (req, res) => {
+  const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } });
+  res.json({ success: true, data: categories });
+};
+
+const createCategory = async (req, res) => {
+  const { name } = req.body;
+  const category = await prisma.category.create({ data: { name } });
+  res.status(201).json({ success: true, message: "Tạo thể loại thành công", data: category });
+};
+
+const updateCategory = async (req, res) => {
+  const { id } = req.params;
+  const { name } = req.body;
+  const category = await prisma.category.update({
+    where: { id: Number(id) },
+    data: { name }
+  });
+  res.json({ success: true, message: "Cập nhật thành công", data: category });
+};
+
+const deleteCategory = async (req, res) => {
+  const { id } = req.params;
+  await prisma.category.delete({ where: { id: Number(id) } });
+  res.json({ success: true, message: "Xóa thể loại thành công" });
+};
+
+// ====================== AUTHOR ======================
+const getAuthors = async (req, res) => {
+  const authors = await prisma.author.findMany({ orderBy: { name: 'asc' } });
+  res.json({ success: true, data: authors });
+};
+
+const createAuthor = async (req, res) => {
+  const { name, bio } = req.body;
+  const author = await prisma.author.create({ data: { name, bio } });
+  res.status(201).json({ success: true, message: "Tạo tác giả thành công", data: author });
+};
+
+const updateAuthor = async (req, res) => {
+  const { id } = req.params;
+  const { name, bio } = req.body;
+  const author = await prisma.author.update({
+    where: { id: Number(id) },
+    data: { name, bio }
+  });
+  res.json({ success: true, message: "Cập nhật tác giả thành công", data: author });
+};
+
+const deleteAuthor = async (req, res) => {
+  const { id } = req.params;
+  await prisma.author.delete({ where: { id: Number(id) } });
+  res.json({ success: true, message: "Xóa tác giả thành công" });
+};
+
+// ====================== TAG ======================
+const getTags = async (req, res) => {
+  const tags = await prisma.tag.findMany({ orderBy: { name: 'asc' } });
+  res.json({ success: true, data: tags });
+};
+
+const createTag = async (req, res) => {
+  const { name } = req.body;
+  const tag = await prisma.tag.create({ data: { name } });
+  res.status(201).json({ success: true, message: "Tạo tag thành công", data: tag });
+};
+
+// ====================== PUBLISHER ======================
+const getPublishers = async (req, res) => {
+  const publishers = await prisma.publisher.findMany({ orderBy: { name: 'asc' } });
+  res.json({ success: true, data: publishers });
+};
+
+const createPublisher = async (req, res) => {
+  const { name } = req.body;
+  const publisher = await prisma.publisher.create({ data: { name } });
+  res.status(201).json({ success: true, message: "Tạo nhà xuất bản thành công", data: publisher });
+};
+
 module.exports = {
   // Books
   getAllBooksAdmin,
@@ -99,5 +178,12 @@ module.exports = {
   // Users
   getAllUsersAdmin,
   updateUserRole,
-  // (Các hàm Category, Author, Tag, Publisher từ trước vẫn giữ nguyên)
+  // Category
+  getCategories, createCategory, updateCategory, deleteCategory,
+  // Author
+  getAuthors, createAuthor, updateAuthor, deleteAuthor,
+  // Tag
+  getTags, createTag,
+  // Publisher
+  getPublishers, createPublisher,
 };

@@ -711,9 +711,9 @@
     "description":"Cô gái yêu cầu sức mạnh trung bình nhưng bị hiểu lầm thành \"thần\".",
     "rating":4.4,
     "page_count":230,
-    "cover_image":"images\/my-abilitiies-average-1.jpg",
+    "cover_image":"images\/my-abilities-average-1.jpg",
     "additional_images":[
-      "images\/my-abilitiies-average-2.jpg"
+      "images\/my-abilities-average-2.jpg"
     ]
   },
   {
@@ -1511,9 +1511,9 @@
     "description":"Tái sinh thành undead và cố gắng trở lại làm adventurer.",
     "rating":4.6,
     "page_count":260,
-    "cover_image":"images\/uwanted-undead-adventurer-1.jpg",
+    "cover_image":"images\/unwanted-undead-adventurer-1.jpg",
     "additional_images":[
-      "images\/uwanted-undead-adventurer-2.jpg"
+      "images\/unwanted-undead-adventurer-2.jpg"
     ]
   },
   {
@@ -1567,9 +1567,9 @@
     "description":"Anh chàng hiện đại được triệu hồi để xây dựng lại vương quốc.",
     "rating":4.7,
     "page_count":290,
-    "cover_image":"images\/erbuilt-the-kingdom-1.jpg",
+    "cover_image":"images\/rebuilt-the-kingdom-1.jpg",
     "additional_images":[
-      "images\/erbuilt-the-kingdom-2.jpg"
+      "images\/rebuilt-the-kingdom-2.jpg"
     ]
   },
   {
