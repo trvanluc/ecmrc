@@ -32,10 +32,10 @@ const errorHandler = require('./middlewares/errorHandler');
 app.use(errorHandler);
 
 // Xử lý route không tồn tại
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: "Route không tồn tại"
+    message: 'Route không tồn tại'
   });
 });
 
