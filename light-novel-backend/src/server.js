@@ -7,7 +7,10 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
 
 // Routes
@@ -18,6 +21,7 @@ app.use('/api/v1/orders', require('./routes/orderRoutes'));
 app.use('/api/v1/reviews', require('./routes/reviewRoutes'));
 app.use('/api/v1/users', require('./routes/userRoutes'));
 app.use('/api/v1/admin', require('./routes/adminRoutes'));
+app.use('/api/v1/recommendations', require('./routes/recommendationRoutes'));
 
 // Test route
 app.get('/', (req, res) => {

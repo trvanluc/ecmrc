@@ -1,4 +1,4 @@
-import api from '@/src/lib/axios';
+import api from '@/lib/api';
 
 const apiService = {
   // Auth
@@ -42,7 +42,63 @@ const apiService = {
     get: () => api.get('/wishlist'),
     add: (bookId: number) => api.post('/wishlist/add', { bookId }),
     remove: (bookId: number) => api.delete(`/wishlist/remove/${bookId}`),
-  }
+  },
+
+  // User
+  users: {
+  updateProfile: (data: {
+    name: string;
+    phone?: string;
+    address?: string;
+    avatar?: string;
+  }) =>
+    api.put('/users/profile', data),
+  }, 
+
+  // Recommendations
+  recommendations: {
+  getPersonalized: () => api.get('/recommendations/personalized'),
+  },
+
+  // Admin
+  admin: {
+    getUsers: () => api.get('/admin/users'),
+
+    getBooks: (params?: { search?: string }) =>
+      api.get('/admin/books', { params }),
+
+    createBook: (data: {
+      title: string;
+      slug: string;
+      description: string;
+      price: number;
+      stock: number;
+      image?: string;
+      authorId: number;
+      categoryId: number;
+    }) =>
+      api.post('/admin/books', data),
+
+    deleteBook: (id: number) =>
+      api.delete(`/admin/books/${id}`),
+
+    getOrders: () => api.get('/admin/orders'),
+
+    updateOrderStatus: (
+      orderId: number,
+      status: string
+    ) =>
+      api.put(`/admin/orders/${orderId}/status`, {
+        status,
+      }),
+    updateUserRole: (
+      userId: number,
+      role: string
+    ) =>
+      api.put(`/admin/users/${userId}/role`, {
+        role,
+      }),
+  },
 };
 
 export default apiService;

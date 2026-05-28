@@ -1,10 +1,11 @@
 'use client';
 
-import BookCard from '@/src/components/book/BookCard';
+import BookCard from '@/components/book/BookCard';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import api from '@/src/lib/axios';
+import api from '@/lib/api';
+import RecommendedBooks from '@/components/book/RecommendedBooks';
 
 interface Book {
   id: number;
@@ -25,8 +26,8 @@ export default function Home() {
     const fetchData = async () => {
       try {
         const [featuredRes, newRes] = await Promise.all([
-          api.get('/api/v1/books/featured'),
-          api.get('/api/v1/books/new-arrivals')
+          api.get('/books/featured'),
+          api.get('/books/new-arrivals')
         ]);
 
         setFeaturedBooks(featuredRes.data.data || []);
@@ -119,12 +120,27 @@ export default function Home() {
           </div>
         </div>
       </div>
+      
+      {/* RECOMMENDATION SECTION - PHẦN ĐIỂM NHẤN */}
+      <div className="max-w-7xl mx-auto px-4 py-16 bg-base-100">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-3xl font-bold">✨ Gợi Ý Dành Riêng Cho Bạn</h2>
+            <p className="text-base-content/70">Dựa trên hành vi đọc và sở thích của bạn</p>
+          </div>
+          <Link href="/books" className="btn btn-ghost gap-2">
+            Xem tất cả <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        <RecommendedBooks />
+      </div>
 
       {/* Banner Promo */}
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="bg-gradient-to-r from-primary to-pink-600 rounded-3xl p-12 text-white text-center">
           <h3 className="text-3xl font-bold mb-4">🎉 Ưu đãi đặc biệt</h3>
-          <p className="text-xl mb-6">Giảm ngay 20% cho đơn hàng đầu tiên</p>
+          <p className="text-xl mb-6">Giảm ngay 20% cho đơn hàng đầu tiên của bạn</p>
           <Link href="/books" className="btn btn-lg btn-secondary">
             Mua Ngay
           </Link>
@@ -133,3 +149,4 @@ export default function Home() {
     </div>
   );
 }
+

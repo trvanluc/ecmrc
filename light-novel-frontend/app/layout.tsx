@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/src/components/common/Navbar";
-import Footer from "@/src/components/common/Footer";
+import Navbar from "@/components/common/Navbar";
+import Footer from "@/components/common/Footer";
 import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ 
