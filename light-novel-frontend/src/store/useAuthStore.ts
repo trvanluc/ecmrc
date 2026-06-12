@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import axios from 'axios';
 import api from '@/lib/api';
 
 interface User {
@@ -18,12 +17,33 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  hydrated: boolean;
 
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  login: (
+    email: string,
+    password: string
+  ) => Promise<User>;
+
+  register: (
+    name: string,
+    email: string,
+    password: string
+  ) => Promise<void>;
+
   logout: () => void;
-  setUser: (user: User, token: string) => void;
+
+  setUser: (
+    user: User,
+    token: string
+  ) => void;
+
+  updateUser: (
+    userData: Partial<User>
+  ) => void;
+
   loadUser: () => void;
+
+  setHydrated: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -33,62 +53,135 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       isLoading: false,
+      hydrated: false,
+
+      setHydrated: () =>
+        set({
+          hydrated: true,
+        }),
 
       setUser: (user, token) => {
-        set({ user, token, isAuthenticated: true });
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        set({
+          user,
+          token,
+          isAuthenticated: true,
+        });
       },
 
-      login: async (email: string, password: string) => {
+      updateUser: (userData) =>
+        set((state) => ({
+          user: state.user
+            ? {
+                ...state.user,
+                ...userData,
+              }
+            : null,
+        })),
+
+      login: async (email, password) => {
         set({ isLoading: true });
+
         try {
-          const res = await api.post('/auth/login', { email, password });
-          const { user, accessToken } = res.data.data;
-          
-          set({ 
-            user, 
-            token: accessToken, 
+          const res = await api.post(
+            '/auth/login',
+            {
+              email,
+              password,
+            }
+          );
+
+          const {
+            user,
+            accessToken,
+          } = res.data.data;
+
+          set({
+            user,
+            token: accessToken,
             isAuthenticated: true,
-            isLoading: false 
+            isLoading: false,
           });
-          
-          axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+
+          return user;
         } catch (error: any) {
-          set({ isLoading: false });
-          throw error.response?.data?.message || "Đăng nhập thất bại";
+          set({
+            isLoading: false,
+          });
+
+          throw (
+            error.response?.data
+              ?.message ||
+            'Đăng nhập thất bại'
+          );
         }
       },
 
-      register: async (name: string, email: string, password: string) => {
-        set({ isLoading: true });
+      register: async (
+        name,
+        email,
+        password
+      ) => {
+        set({
+          isLoading: true,
+        });
+
         try {
-          const res = await api.post('/auth/register', { name, email, password });
-          const { user, accessToken } = res.data.data;
-          
-          set({ 
-            user, 
-            token: accessToken, 
+          const res = await api.post(
+            '/auth/register',
+            {
+              name,
+              email,
+              password,
+            }
+          );
+
+          const {
+            user,
+            accessToken,
+          } = res.data.data;
+
+          set({
+            user,
+            token: accessToken,
             isAuthenticated: true,
-            isLoading: false 
+            isLoading: false,
           });
         } catch (error: any) {
-          set({ isLoading: false });
-          throw error.response?.data?.message || "Đăng ký thất bại";
+          set({
+            isLoading: false,
+          });
+
+          throw (
+            error.response?.data
+              ?.message ||
+            'Đăng ký thất bại'
+          );
         }
       },
 
       logout: () => {
-        set({ user: null, token: null, isAuthenticated: false });
-        delete axios.defaults.headers.common['Authorization'];
-        localStorage.removeItem('auth-storage');
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+
+        localStorage.removeItem(
+          'auth-storage'
+        );
       },
 
-      loadUser: () => {
-        // Tự động load user khi refresh trang (được xử lý bởi persist)
-      }
+      loadUser: () => {},
     }),
     {
       name: 'auth-storage',
+
+      onRehydrateStorage: () => {
+        return (state) => {
+          state?.setHydrated();
+        };
+      },
     }
   )
 );

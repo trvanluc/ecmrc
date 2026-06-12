@@ -7,7 +7,11 @@ import toast from 'react-hot-toast';
 import apiService from '@/services/api';
 
 export default function ProfilePage() {
-  const { user, logout } = useAuthStore();
+  const {
+    user,
+    logout,
+    updateUser,
+  } = useAuthStore();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -38,8 +42,24 @@ export default function ProfilePage() {
     setLoading(true);
 
     try {
-      await apiService.users.updateProfile(formData);
-      toast.success("Cập nhật thông tin cá nhân thành công!");
+      const payload = {
+        ...formData,
+        avatar:
+          formData.avatar?.trim() === ''
+            ? undefined
+            : formData.avatar,
+      };
+
+      const res =
+        await apiService.users.updateProfile(
+          payload
+        );
+
+      updateUser(res.data.data);
+
+      toast.success(
+        'Cập nhật thông tin cá nhân thành công!'
+      );
     } catch (error: any) {
       toast.error(error || "Cập nhật thất bại");
     } finally {

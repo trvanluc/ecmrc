@@ -5,60 +5,42 @@ import BookCard from './BookCard';
 import apiService from '@/services/api';
 import { useAuthStore } from '@/store/useAuthStore';
 
-export default function RecommendedBooks() {
+export default function RecommendedBooks({ bookId }: { bookId?: number }) {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    const fetchRecommendations = async () => {
+    const fetchData = async () => {
       try {
-        let books: any[] = [];
-
-        if (isAuthenticated) {
-          const res =
-            await apiService.recommendations.getPersonalized();
-
-          books = Array.isArray(res.data.data)
-            ? res.data.data
-            : [];
+        if (bookId) {
+          // Because You Read
+          const res = await apiService.recommendations.becauseYouRead(bookId);
+          setRecommendations(res.data.data || []);
+        } else if (isAuthenticated) {
+          // Personalized
+          const res = await apiService.recommendations.getPersonalized();
+          setRecommendations(res.data.data || []);
         } else {
-          const res =
-            await apiService.books.getFeatured();
-
-          books = Array.isArray(res.data.data)
-            ? res.data.data
-            : [];
+          // Featured
+          const res = await apiService.books.getFeatured();
+          setRecommendations(res.data || []);
         }
-
-        setRecommendations(books);
       } catch (error) {
-        console.error('Lỗi lấy gợi ý:', error);
-        setRecommendations([]);
+        console.error(error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRecommendations();
-  }, [isAuthenticated]);
+    fetchData();
+  }, [bookId, isAuthenticated]);
 
-  if (loading) {
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-        {[...Array(5)].map((_, i) => (
-          <div
-            key={i}
-            className="skeleton h-[380px] rounded-xl"
-          />
-        ))}
-      </div>
-    );
-  }
+  if (loading) return <div className="loading loading-spinner loading-lg"></div>;
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-      {recommendations.map((book: any) => (
+      {recommendations.map((book) => (
         <BookCard key={book.id} book={book} />
       ))}
     </div>

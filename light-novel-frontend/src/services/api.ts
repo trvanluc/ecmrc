@@ -56,8 +56,9 @@ const apiService = {
   }, 
 
   // Recommendations
-  recommendations: {
-  getPersonalized: () => api.get('/recommendations/personalized'),
+    recommendations: {
+    getPersonalized: () => api.get('/recommendations/personalized'),
+    becauseYouRead: (bookId: number) => api.get(`/recommendations/because-you-read/${bookId}`),
   },
 
   // Admin
@@ -79,6 +80,8 @@ const apiService = {
     }) =>
       api.post('/admin/books', data),
 
+    updateBook: (id: number, data: any) => api.put(`/admin/books/${id}`, data),
+    
     deleteBook: (id: number) =>
       api.delete(`/admin/books/${id}`),
 

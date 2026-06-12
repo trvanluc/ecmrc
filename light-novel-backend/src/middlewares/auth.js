@@ -3,7 +3,9 @@
   const jwt = require('jsonwebtoken');
   const prisma = require('../config/database');
 
+  
   const protect = async (req, res, next) => {
+    console.log('AUTH HEADER:', req.headers.authorization);
     try {
       let token;
       if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {

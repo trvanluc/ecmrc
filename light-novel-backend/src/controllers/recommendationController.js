@@ -1,74 +1,64 @@
 const prisma = require('../config/database');
 
-// Content-based Filtering bằng Cosine Similarity
+// ==================== CONTENT-BASED FILTERING ====================
 const getPersonalizedRecommendations = async (req, res) => {
   try {
     const userId = req.user.id;
     const limit = parseInt(req.query.limit) || 8;
 
-    // Lấy các sách user đã tương tác
+    // Lấy sách user đã tương tác
     const userBehaviors = await prisma.userBehavior.findMany({
       where: { userId },
-      include: { book: true }
+      include: { book: { include: { tags: true, category: true } } }
     });
 
     if (userBehaviors.length === 0) {
-      // Nếu user mới → trả về sách phổ biến
-      const popularBooks = await prisma.book.findMany({
+      // User mới → trả sách nổi bật
+      const popular = await prisma.book.findMany({
         include: { author: true, category: true },
         orderBy: { rating: 'desc' },
         take: limit
       });
-      return res.json({ success: true, data: popularBooks, type: 'popular' });
+      return res.json({ success: true, data: popular, message: "Sách nổi bật" });
     }
 
-    // Lấy tất cả sách để so sánh
     const allBooks = await prisma.book.findMany({
       include: { tags: true, author: true, category: true }
     });
 
-    const recommendations = [];
-
-    for (const book of allBooks) {
+    const scoredBooks = allBooks.map(book => {
       let score = 0;
-      let matchCount = 0;
 
-      for (const behavior of userBehaviors) {
+      userBehaviors.forEach(behavior => {
         const userBook = behavior.book;
+        if (!userBook) return;
 
-        // So sánh category
-        if (userBook.categoryId === book.categoryId) score += 3;
+        // Điểm category
+        if (userBook.categoryId === book.categoryId) score += 4;
 
-        // So sánh tags
+        // Điểm tags
         const commonTags = book.tags.filter(tag => 
           userBook.tags.some(ubTag => ubTag.id === tag.id)
         ).length;
+        score += commonTags * 2.5;
+      });
 
-        score += commonTags * 2;
-        if (commonTags > 0) matchCount++;
-      }
+      return { ...book, score };
+    });
 
-      if (score > 0) {
-        recommendations.push({
-          ...book,
-          similarityScore: score
-        });
-      }
-    }
-
-    // Sort theo điểm tương đồng và trả về
-    recommendations.sort((a, b) => b.similarityScore - a.similarityScore);
+    scoredBooks.sort((a, b) => b.score - a.score);
 
     res.json({
       success: true,
-      data: recommendations.slice(0, limit),
-      type: 'content-based'
+      data: scoredBooks.slice(0, limit),
+      type: "content-based"
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
+// ==================== BECAUSE YOU READ ====================
 const getBecauseYouRead = async (req, res) => {
   try {
     const { bookId } = req.params;
@@ -89,7 +79,7 @@ const getBecauseYouRead = async (req, res) => {
           { tags: { some: { id: { in: targetBook.tags.map(t => t.id) } } } }
         ]
       },
-      include: { author: true, category: true, tags: true },
+      include: { author: true, category: true },
       take: limit
     });
 

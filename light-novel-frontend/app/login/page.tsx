@@ -20,10 +20,18 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      toast.success("Đăng nhập thành công!");
-      router.push('/');
+
+      toast.success('Đăng nhập thành công!');
+
+      const user = useAuthStore.getState().user;
+
+      if (user?.role === 'ADMIN') {
+        router.push('/admin');
+      } else {
+        router.push('/');
+      }
     } catch (error: any) {
-      toast.error(error || "Đăng nhập thất bại");
+      toast.error(error || 'Đăng nhập thất bại');
     } finally {
       setLoading(false);
     }
@@ -34,19 +42,28 @@ export default function LoginPage() {
       <div className="card w-full max-w-md bg-base-100 shadow-xl">
         <div className="card-body">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-base-content">📖 LightNovel</h1>
-            <p className="text-base-content/70 mt-2">Đăng nhập để tiếp tục</p>
+            <h1 className="text-4xl font-bold text-base-content">
+              📖 LightNovel
+            </h1>
+            <p className="text-base-content/70 mt-2">
+              Đăng nhập để tiếp tục
+            </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="label">
-                <span className="label-text text-base-content">Email</span>
+                <span className="label-text text-base-content">
+                  Email
+                </span>
               </label>
+
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) =>
+                  setEmail(e.target.value)
+                }
                 placeholder="your@email.com"
                 className="input input-bordered w-full"
                 required
@@ -55,31 +72,41 @@ export default function LoginPage() {
 
             <div>
               <label className="label">
-                <span className="label-text text-base-content">Mật khẩu</span>
+                <span className="label-text text-base-content">
+                  Mật khẩu
+                </span>
               </label>
+
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) =>
+                  setPassword(e.target.value)
+                }
                 placeholder="••••••••"
                 className="input input-bordered w-full"
                 required
               />
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn btn-primary w-full btn-lg"
               disabled={loading}
             >
-              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+              {loading
+                ? 'Đang đăng nhập...'
+                : 'Đăng nhập'}
             </button>
           </form>
 
           <div className="text-center mt-6">
             <p className="text-base-content">
               Chưa có tài khoản?{' '}
-              <Link href="/register" className="text-primary hover:underline font-medium">
+              <Link
+                href="/register"
+                className="text-primary hover:underline font-medium"
+              >
                 Đăng ký ngay
               </Link>
             </p>

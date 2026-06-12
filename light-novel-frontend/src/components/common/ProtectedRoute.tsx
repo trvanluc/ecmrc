@@ -9,18 +9,30 @@ interface ProtectedRouteProps {
   children: ReactNode;
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuthStore();
+export default function ProtectedRoute({
+  children,
+}: ProtectedRouteProps) {
+  const {
+    isAuthenticated,
+    hydrated,
+  } = useAuthStore();
+
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (
+      hydrated &&
+      !isAuthenticated
+    ) {
       router.push('/login');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [
+    hydrated,
+    isAuthenticated,
+    router,
+  ]);
 
-  // Hiển thị loading trong lúc kiểm tra
-  if (isLoading) {
+  if (!hydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <span className="loading loading-spinner loading-lg"></span>
@@ -28,7 +40,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // Nếu chưa đăng nhập thì không render children
   if (!isAuthenticated) {
     return null;
   }
