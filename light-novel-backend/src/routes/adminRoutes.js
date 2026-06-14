@@ -33,6 +33,13 @@ router.delete('/authors/:id', protect, adminOnly, adminController.deleteAuthor);
 router.post('/tags', protect, adminOnly, validate(tagSchema), adminController.createTag);
 router.post('/publishers', protect, adminOnly, adminController.createPublisher);
 
+router.get(
+  '/dashboard-stats',
+  protect,
+  adminOnly,
+  adminController.getDashboardStats
+);
+
 // Order & User Management
 router.get('/books', protect, adminOnly, adminController.getAllBooksAdmin);
 router.get('/orders', protect, adminOnly, adminController.getAllOrdersAdmin);

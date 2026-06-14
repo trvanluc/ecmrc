@@ -86,7 +86,24 @@ const getMyOrders = async (req, res) => {
       where: { userId: req.user.id },
       include: {
         items: {
-          include: { book: { select: { id: true, title: true, image: true, price: true } } }
+          include: {
+            book: {
+              select: {
+                id: true,
+                title: true,
+                image: true,
+                price: true,
+                reviews: {
+                  where: {
+                    userId: req.user.id
+                  },
+                  select: {
+                    id: true
+                  }
+                }
+              }
+            }
+          }
         }
       },
       orderBy: { createdAt: 'desc' }

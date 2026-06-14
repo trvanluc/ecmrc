@@ -4,7 +4,7 @@ const prisma = require('../config/database');
 const getPersonalizedRecommendations = async (req, res) => {
   try {
     const userId = req.user.id;
-    const limit = parseInt(req.query.limit) || 8;
+    const limit = parseInt(req.query.limit) || 10;
 
     // Lấy sách user đã tương tác
     const userBehaviors = await prisma.userBehavior.findMany({
@@ -12,18 +12,69 @@ const getPersonalizedRecommendations = async (req, res) => {
       include: { book: { include: { tags: true, category: true } } }
     });
 
+    // Sách user đã mua
+    const purchasedBooks = await prisma.orderItem.findMany({
+      where: {
+        order: {
+          userId,
+          status: 'DELIVERED'
+        }
+      },
+      select: {
+        bookId: true
+      }
+    });
+
+    // Sách user đã review
+    const reviewedBooks = await prisma.review.findMany({
+      where: { userId },
+      select: {
+        bookId: true
+      }
+    });
+
     if (userBehaviors.length === 0) {
       // User mới → trả sách nổi bật
+      const totalBooks = await prisma.book.count();
+
+      const randomSkip = Math.max(
+        0,
+        Math.floor(Math.random() * Math.max(1, totalBooks - limit))
+      );
+
       const popular = await prisma.book.findMany({
-        include: { author: true, category: true },
-        orderBy: { rating: 'desc' },
+        include: {
+          author: true,
+          category: true
+        },
+        orderBy: {
+          rating: 'desc'
+        },
+        skip: randomSkip,
         take: limit
       });
-      return res.json({ success: true, data: popular, message: "Sách nổi bật" });
     }
 
+    const excludedBookIds = [
+      ...new Set([
+        ...purchasedBooks.map(b => b.bookId),
+        ...reviewedBooks.map(b => b.bookId)
+      ])
+    ];
+
+    
+
     const allBooks = await prisma.book.findMany({
-      include: { tags: true, author: true, category: true }
+      where: {
+        id: {
+          notIn: excludedBookIds
+        }
+      },
+      include: {
+        tags: true,
+        author: true,
+        category: true
+      }
     });
 
     const scoredBooks = allBooks.map(book => {
@@ -33,25 +84,63 @@ const getPersonalizedRecommendations = async (req, res) => {
         const userBook = behavior.book;
         if (!userBook) return;
 
-        // Điểm category
-        if (userBook.categoryId === book.categoryId) score += 4;
+        let weight = 1;
 
-        // Điểm tags
-        const commonTags = book.tags.filter(tag => 
+        switch (behavior.action) {
+          case 'PURCHASE':
+            weight = 5;
+            break;
+
+          case 'ADD_TO_CART':
+            weight = 3;
+            break;
+
+          case 'VIEW':
+            weight = 1;
+            break;
+
+          default:
+            weight = 1;
+        }
+
+        // cùng thể loại
+        if (userBook.categoryId === book.categoryId) {
+          score += 6 * weight;
+        }
+
+        // cùng tác giả
+        if (userBook.authorId === book.authorId) {
+          score += 4 * weight;
+        }
+
+        // cùng tag
+        const commonTags = book.tags.filter(tag =>
           userBook.tags.some(ubTag => ubTag.id === tag.id)
         ).length;
-        score += commonTags * 2.5;
+
+        score += commonTags * 3 * weight;
       });
 
-      return { ...book, score };
+      score += (book.rating || 0) * 2;
+
+      return {
+        ...book,
+        score
+      };
     });
 
     scoredBooks.sort((a, b) => b.score - a.score);
 
+    const topBooks = scoredBooks
+      .filter(book => book.score > 0)
+      .slice(0, 20);
+
+    topBooks.sort(() => Math.random() - 0.5);
+
     res.json({
       success: true,
-      data: scoredBooks.slice(0, limit),
-      type: "content-based"
+      data: topBooks.slice(0, limit),
+      type: "hybrid-content-based"
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

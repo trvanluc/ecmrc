@@ -28,7 +28,7 @@ const createReview = async (req, res) => {
     });
 
     // Nếu muốn bắt buộc phải mua mới được review thì uncomment dòng dưới
-    // if (!hasPurchased) return res.status(400).json({ success: false, message: "Bạn phải mua sách mới được đánh giá" });
+    if (!hasPurchased) return res.status(400).json({ success: false, message: "Bạn phải mua sách mới được đánh giá" });
 
     // Kiểm tra đã review chưa
     const existingReview = await prisma.review.findUnique({

@@ -101,6 +101,28 @@ const apiService = {
       api.put(`/admin/users/${userId}/role`, {
         role,
       }),
+
+    getDashboardStats: () =>
+      api.get('/admin/dashboard-stats'),
+  },
+
+  reviews: {
+    create: (
+      bookId: number,
+      rating: number,
+      comment: string
+    ) =>
+      api.post('/reviews', {
+        bookId,
+        rating,
+        comment,
+      }),
+
+    getByBook: (bookId: number) =>
+      api.get(`/reviews/book/${bookId}`),
+
+    getMyReviews: () =>
+      api.get('/reviews/my-reviews'),
   },
 };
 

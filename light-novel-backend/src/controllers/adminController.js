@@ -167,6 +167,77 @@ const createPublisher = async (req, res) => {
   res.status(201).json({ success: true, message: "Tạo nhà xuất bản thành công", data: publisher });
 };
 
+// ====================== DASHBOARD STATS ======================
+const getDashboardStats = async (req, res) => {
+  try {
+    const [
+      totalBooks,
+      totalOrders,
+      totalUsers,
+      deliveredOrders,
+      pendingOrders,
+      shippingOrders,
+      cancelledOrders,
+      revenueResult
+    ] = await Promise.all([
+      prisma.book.count(),
+
+      prisma.order.count(),
+
+      prisma.user.count(),
+
+      prisma.order.count({
+        where: { status: 'DELIVERED' }
+      }),
+
+      prisma.order.count({
+        where: { status: 'PENDING' }
+      }),
+
+      prisma.order.count({
+        where: { status: 'SHIPPING' }
+      }),
+
+      prisma.order.count({
+        where: { status: 'CANCELLED' }
+      }),
+
+      prisma.order.aggregate({
+        where: {
+          status: 'DELIVERED'
+        },
+        _sum: {
+          totalAmount: true
+        }
+      })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        totalBooks,
+        totalOrders,
+        totalUsers,
+
+        deliveredOrders,
+        pendingOrders,
+        shippingOrders,
+        cancelledOrders,
+
+        totalRevenue:
+          revenueResult._sum.totalAmount || 0
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
 module.exports = {
   // Books
   getAllBooksAdmin,
@@ -187,4 +258,6 @@ module.exports = {
   getTags, createTag,
   // Publisher
   getPublishers, createPublisher,
+
+  getDashboardStats,
 };

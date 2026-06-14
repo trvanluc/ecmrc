@@ -9,9 +9,14 @@ import Image from 'next/image';
 
 interface OrderItem {
   book: {
+    id: number;
     title: string;
     image?: string;
+    reviews?: {
+      id: number;
+    }[];
   };
+
   quantity: number;
   price: number;
 }
