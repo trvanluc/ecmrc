@@ -1,3 +1,4 @@
+  
 const prisma = require('../config/database');
 
 // ====================== BOOK MANAGEMENT ======================
@@ -60,11 +61,57 @@ const updateOrderStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  const order = await prisma.order.update({
-    where: { id: Number(id) },
-    data: { status }
-  });
+const updateData = {
+  status
+};
+
+if (status === 'DELIVERED') {
+  updateData.deliveredAt = new Date();
+}
+
+const order = await prisma.order.update({
+  where: {
+    id: Number(id)
+  },
+  data: updateData
+});
   res.json({ success: true, message: "Cập nhật trạng thái đơn hàng thành công", data: order });
+};
+
+const approveReturn = async (req, res) => {
+  const { id } = req.params;
+
+  const order = await prisma.order.update({
+    where: {
+      id: Number(id)
+    },
+    data: {
+      status: 'RETURNED'
+    }
+  });
+
+  res.json({
+    success: true,
+    data: order
+  });
+};
+
+const rejectReturn = async (req, res) => {
+  const { id } = req.params;
+
+  const order = await prisma.order.update({
+    where: {
+      id: Number(id)
+    },
+    data: {
+      status: 'RETURN_REJECTED'
+    }
+  });
+
+  res.json({
+    success: true,
+    data: order
+  });
 };
 
 // ====================== USER MANAGEMENT ======================
@@ -166,6 +213,77 @@ const createPublisher = async (req, res) => {
   res.status(201).json({ success: true, message: "Tạo nhà xuất bản thành công", data: publisher });
 };
 
+// ====================== DASHBOARD STATS ======================
+const getDashboardStats = async (req, res) => {
+  try {
+    const [
+      totalBooks,
+      totalOrders,
+      totalUsers,
+      deliveredOrders,
+      pendingOrders,
+      shippingOrders,
+      cancelledOrders,
+      revenueResult
+    ] = await Promise.all([
+      prisma.book.count(),
+
+      prisma.order.count(),
+
+      prisma.user.count(),
+
+      prisma.order.count({
+        where: { status: 'DELIVERED' }
+      }),
+
+      prisma.order.count({
+        where: { status: 'PENDING' }
+      }),
+
+      prisma.order.count({
+        where: { status: 'SHIPPING' }
+      }),
+
+      prisma.order.count({
+        where: { status: 'CANCELLED' }
+      }),
+
+      prisma.order.aggregate({
+        where: {
+          status: 'DELIVERED'
+        },
+        _sum: {
+          totalAmount: true
+        }
+      })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        totalBooks,
+        totalOrders,
+        totalUsers,
+
+        deliveredOrders,
+        pendingOrders,
+        shippingOrders,
+        cancelledOrders,
+
+        totalRevenue:
+          revenueResult._sum.totalAmount || 0
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
 module.exports = {
   // Books
   getAllBooksAdmin,
@@ -186,4 +304,9 @@ module.exports = {
   getTags, createTag,
   // Publisher
   getPublishers, createPublisher,
+
+  getDashboardStats,
+  approveReturn,
+  rejectReturn,
+
 };

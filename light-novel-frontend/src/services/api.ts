@@ -1,4 +1,4 @@
-import api from '@/src/lib/axios';
+import api from '@/lib/api';
 
 const apiService = {
   // Auth
@@ -35,14 +35,129 @@ const apiService = {
   orders: {
     create: (data: any) => api.post('/orders', data),
     getMyOrders: () => api.get('/orders'),
-  },
+  
 
+  cancelOrder: (id: number) =>
+    api.put(`/orders/${id}/cancel`),
+
+  requestReturn: (
+    orderId: number,
+    reason: string
+  ) =>
+    api.put(
+      `/orders/${orderId}/request-return`,
+      { reason }
+    ),
+},
   // Wishlist (sau này)
   wishlist: {
     get: () => api.get('/wishlist'),
     add: (bookId: number) => api.post('/wishlist/add', { bookId }),
     remove: (bookId: number) => api.delete(`/wishlist/remove/${bookId}`),
-  }
+  },
+
+  // User
+  users: {
+  updateProfile: (data: {
+    name: string;
+    phone?: string;
+    address?: string;
+    avatar?: string;
+  }) =>
+    api.put('/users/profile', data),
+  
+  requestReturn: (
+    orderId: number,
+    reason: string
+  ) =>
+    api.put(
+      `/orders/${orderId}/request-return`,
+      { reason }
+    ),
+  }, 
+
+  // Recommendations
+    recommendations: {
+    getPersonalized: () => api.get('/recommendations/personalized'),
+    becauseYouRead: (bookId: number) => api.get(`/recommendations/because-you-read/${bookId}`),
+  },
+
+  // Admin
+  admin: {
+    getUsers: () => api.get('/admin/users'),
+
+    getBooks: (params?: { search?: string }) =>
+      api.get('/admin/books', { params }),
+
+    createBook: (data: {
+      title: string;
+      slug: string;
+      description: string;
+      price: number;
+      stock: number;
+      image?: string;
+      authorId: number;
+      categoryId: number;
+    }) =>
+      api.post('/admin/books', data),
+
+    updateBook: (id: number, data: any) => api.put(`/admin/books/${id}`, data),
+    
+    deleteBook: (id: number) =>
+      api.delete(`/admin/books/${id}`),
+
+    getOrders: () => api.get('/admin/orders'),
+
+    updateOrderStatus: (
+      orderId: number,
+      status: string
+    ) =>
+      api.put(`/admin/orders/${orderId}/status`, {
+        status,
+      }),
+    updateUserRole: (
+      userId: number,
+      role: string
+    ) =>
+      api.put(`/admin/users/${userId}/role`, {
+        role,
+      }),
+
+    getDashboardStats: () =>
+      api.get('/admin/dashboard-stats'),
+
+    approveReturn: (orderId: number) =>
+      api.put(
+        `/admin/orders/${orderId}/approve-return`
+      ),
+
+    rejectReturn: (orderId: number) =>
+      api.put(
+        `/admin/orders/${orderId}/reject-return`
+      ),
+      
+  },
+
+  reviews: {
+    create: (
+      bookId: number,
+      rating: number,
+      comment: string
+    ) =>
+      api.post('/reviews', {
+        bookId,
+        rating,
+        comment,
+      }),
+
+    getByBook: (bookId: number) =>
+      api.get(`/reviews/book/${bookId}`),
+
+    getMyReviews: () =>
+      api.get('/reviews/my-reviews'),
+
+    
+  },
 };
 
 export default apiService;

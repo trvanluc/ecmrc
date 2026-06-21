@@ -33,11 +33,32 @@ router.delete('/authors/:id', protect, adminOnly, adminController.deleteAuthor);
 router.post('/tags', protect, adminOnly, validate(tagSchema), adminController.createTag);
 router.post('/publishers', protect, adminOnly, adminController.createPublisher);
 
+router.get(
+  '/dashboard-stats',
+  protect,
+  adminOnly,
+  adminController.getDashboardStats
+);
+
 // Order & User Management
 router.get('/books', protect, adminOnly, adminController.getAllBooksAdmin);
 router.get('/orders', protect, adminOnly, adminController.getAllOrdersAdmin);
 router.put('/orders/:id/status', protect, adminOnly, adminController.updateOrderStatus);
 router.get('/users', protect, adminOnly, adminController.getAllUsersAdmin);
 router.put('/users/:id/role', protect, adminOnly, adminController.updateUserRole);
+
+router.put(
+  '/orders/:id/approve-return',
+  protect,
+  adminOnly,
+  adminController.approveReturn
+);
+
+router.put(
+  '/orders/:id/reject-return',
+  protect,
+  adminOnly,
+  adminController.rejectReturn
+);
 
 module.exports = router;

@@ -139,8 +139,23 @@ const getBookBySlug = async (req, res) => {
     });
 
     if (!book) return notFoundResponse(res, "Không tìm thấy sách");
+    
+    const relatedBooks = await prisma.book.findMany({
+      where: {
+        id: { not: book.id },
+        categoryId: book.categoryId
+      },
+      include: {
+        author: true
+      },
+      take: 6
+    });
 
-    return successResponse(res, { book });
+    return successResponse(res, {
+      book,
+      relatedBooks
+    });
+    
   } catch (error) {
     return errorResponse(res, error.message);
   }

@@ -55,7 +55,7 @@ const updateCartItemSchema = z.object({
 
 // ====================== ORDER ======================
 const createOrderSchema = z.object({
-  shippingAddress: z.string().min(5, "Địa chỉ phải chi tiết hơn"),
+  shippingAddress: z.string().min(1, "Địa chỉ phải chi tiết hơn"),
   paymentMethod: z.enum(["cod", "bank"]).optional().default("cod"),
   note: z.string().optional()
 });

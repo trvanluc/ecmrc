@@ -86,7 +86,24 @@ const getMyOrders = async (req, res) => {
       where: { userId: req.user.id },
       include: {
         items: {
-          include: { book: { select: { id: true, title: true, image: true, price: true } } }
+          include: {
+            book: {
+              select: {
+                id: true,
+                title: true,
+                image: true,
+                price: true,
+                reviews: {
+                  where: {
+                    userId: req.user.id
+                  },
+                  select: {
+                    id: true
+                  }
+                }
+              }
+            }
+          }
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -169,9 +186,67 @@ const cancelOrder = async (req, res) => {
   }
 };
 
+const requestReturn = async (req, res) => {
+  try {
+    const { reason } = req.body;
+
+    const order = await prisma.order.findFirst({
+      where: {
+        id: Number(req.params.id),
+        userId: req.user.id,
+        status: 'DELIVERED'
+      }
+    });
+
+    if (!order) {
+      return res.status(400).json({
+        success: false,
+        message: 'Đơn hàng không hợp lệ'
+      });
+    }
+
+    const deliveredDate = new Date(order.deliveredAt);
+    const now = new Date();
+
+    const diffDays =
+      (now - deliveredDate) /
+      (1000 * 60 * 60 * 24);
+
+    if (diffDays > 3) {
+      return res.status(400).json({
+        success: false,
+        message: 'Đã quá thời hạn trả hàng'
+      });
+    }
+
+    await prisma.order.update({
+      where: {
+        id: order.id
+      },
+      data: {
+        status: 'RETURN_REQUESTED',
+        returnReason: reason,
+        returnRequestAt: new Date()
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Yêu cầu trả hàng đã được gửi'
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getMyOrders,
   getOrderById,
-  cancelOrder
+  cancelOrder,
+  requestReturn
 };

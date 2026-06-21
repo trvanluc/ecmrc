@@ -12,7 +12,12 @@ const { register, login, refreshToken, getMe, logout } = require('../controllers
 router.post('/register', validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);
 router.post('/refresh-token', validate(refreshTokenSchema), refreshToken);
-router.get('/me', getMe);
-router.post('/logout', logout);
+
+const {
+  protect
+} = require('../middlewares/auth');
+
+router.get('/me', protect, getMe);
+router.post('/logout', protect, logout);
 
 module.exports = router;
