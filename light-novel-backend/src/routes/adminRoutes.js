@@ -47,4 +47,18 @@ router.put('/orders/:id/status', protect, adminOnly, adminController.updateOrder
 router.get('/users', protect, adminOnly, adminController.getAllUsersAdmin);
 router.put('/users/:id/role', protect, adminOnly, adminController.updateUserRole);
 
+router.put(
+  '/orders/:id/approve-return',
+  protect,
+  adminOnly,
+  adminController.approveReturn
+);
+
+router.put(
+  '/orders/:id/reject-return',
+  protect,
+  adminOnly,
+  adminController.rejectReturn
+);
+
 module.exports = router;

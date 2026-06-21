@@ -61,11 +61,57 @@ const updateOrderStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  const order = await prisma.order.update({
-    where: { id: Number(id) },
-    data: { status }
-  });
+const updateData = {
+  status
+};
+
+if (status === 'DELIVERED') {
+  updateData.deliveredAt = new Date();
+}
+
+const order = await prisma.order.update({
+  where: {
+    id: Number(id)
+  },
+  data: updateData
+});
   res.json({ success: true, message: "Cập nhật trạng thái đơn hàng thành công", data: order });
+};
+
+const approveReturn = async (req, res) => {
+  const { id } = req.params;
+
+  const order = await prisma.order.update({
+    where: {
+      id: Number(id)
+    },
+    data: {
+      status: 'RETURNED'
+    }
+  });
+
+  res.json({
+    success: true,
+    data: order
+  });
+};
+
+const rejectReturn = async (req, res) => {
+  const { id } = req.params;
+
+  const order = await prisma.order.update({
+    where: {
+      id: Number(id)
+    },
+    data: {
+      status: 'RETURN_REJECTED'
+    }
+  });
+
+  res.json({
+    success: true,
+    data: order
+  });
 };
 
 // ====================== USER MANAGEMENT ======================
@@ -260,4 +306,7 @@ module.exports = {
   getPublishers, createPublisher,
 
   getDashboardStats,
+  approveReturn,
+  rejectReturn,
+
 };

@@ -78,6 +78,32 @@ export default function OrdersPage() {
     }
   };
 
+  const [returnOrderId, setReturnOrderId] =
+    useState<number | null>(null);
+
+  const [returnReason, setReturnReason] =
+    useState('');
+
+  const requestReturn = async () => {
+    if (!returnOrderId) return;
+
+    try {
+      await apiService.orders.requestReturn(
+        returnOrderId,
+        returnReason
+      );
+
+      toast.success('Đã gửi yêu cầu trả hàng');
+
+      setReturnOrderId(null);
+      setReturnReason('');
+
+      fetchOrders();
+    } catch (error) {
+      toast.error('Không thể gửi yêu cầu');
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING': return <div className="badge badge-warning">Chờ xác nhận</div>;
@@ -85,6 +111,9 @@ export default function OrdersPage() {
       case 'SHIPPING': return <div className="badge badge-primary">Đang giao</div>;
       case 'DELIVERED': return <div className="badge badge-success">Đã giao</div>;
       case 'CANCELLED': return <div className="badge badge-error">Đã hủy</div>;
+      case 'RETURN_REQUESTED': return <div className="badge badge-ghost">Yêu cầu trả hàng</div>;
+      case 'RETURN_APPROVED': return <div className="badge badge-success">Đã duyệt trả hàng</div>;
+      case 'RETURN_REJECTED': return <div className="badge badge-error">Đã từ chối trả hàng</div>;
       default: return <div className="badge">{status}</div>;
     }
   };
@@ -197,6 +226,16 @@ export default function OrdersPage() {
                           <p className="font-medium mb-2 text-base-content">Địa chỉ giao hàng</p>
                           <p className="text-base-content/80">{order.shippingAddress}</p>
                         </div>
+                        {order.status === 'DELIVERED' && (
+                          <button
+                            className="btn btn-error btn-sm mt-4"
+                            onClick={() =>
+                              setReturnOrderId(order.id)
+                            }
+                          >
+                            Yêu cầu trả hàng
+                          </button>
+                        )}
                         {order.note && (
                           <div>
                             <p className="font-medium mb-2 text-base-content">Ghi chú</p>
@@ -211,6 +250,43 @@ export default function OrdersPage() {
             </div>
           )}
         </div>
+
+        {returnOrderId && (
+          <dialog className="modal modal-open">
+            <div className="modal-box">
+              <h3 className="font-bold text-lg">
+                Yêu cầu trả hàng
+              </h3>
+
+              <textarea
+                className="textarea textarea-bordered w-full mt-4"
+                placeholder="Nhập lý do trả hàng..."
+                value={returnReason}
+                onChange={(e) =>
+                  setReturnReason(e.target.value)
+                }
+              />
+
+              <div className="modal-action">
+                <button
+                  className="btn"
+                  onClick={() =>
+                    setReturnOrderId(null)
+                  }
+                >
+                  Hủy
+                </button>
+
+                <button
+                  className="btn btn-error"
+                  onClick={requestReturn}
+                >
+                  Gửi yêu cầu
+                </button>
+              </div>
+            </div>
+          </dialog>
+        )}
 
         {/* Review Modal */}
         {selectedBook && (

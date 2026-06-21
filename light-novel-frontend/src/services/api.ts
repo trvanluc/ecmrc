@@ -35,8 +35,20 @@ const apiService = {
   orders: {
     create: (data: any) => api.post('/orders', data),
     getMyOrders: () => api.get('/orders'),
-  },
+  
 
+  cancelOrder: (id: number) =>
+    api.put(`/orders/${id}/cancel`),
+
+  requestReturn: (
+    orderId: number,
+    reason: string
+  ) =>
+    api.put(
+      `/orders/${orderId}/request-return`,
+      { reason }
+    ),
+},
   // Wishlist (sau này)
   wishlist: {
     get: () => api.get('/wishlist'),
@@ -53,6 +65,15 @@ const apiService = {
     avatar?: string;
   }) =>
     api.put('/users/profile', data),
+  
+  requestReturn: (
+    orderId: number,
+    reason: string
+  ) =>
+    api.put(
+      `/orders/${orderId}/request-return`,
+      { reason }
+    ),
   }, 
 
   // Recommendations
@@ -104,6 +125,17 @@ const apiService = {
 
     getDashboardStats: () =>
       api.get('/admin/dashboard-stats'),
+
+    approveReturn: (orderId: number) =>
+      api.put(
+        `/admin/orders/${orderId}/approve-return`
+      ),
+
+    rejectReturn: (orderId: number) =>
+      api.put(
+        `/admin/orders/${orderId}/reject-return`
+      ),
+      
   },
 
   reviews: {
@@ -123,6 +155,8 @@ const apiService = {
 
     getMyReviews: () =>
       api.get('/reviews/my-reviews'),
+
+    
   },
 };
 

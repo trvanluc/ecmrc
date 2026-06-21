@@ -33,12 +33,17 @@ interface Order {
   shippingAddress: string;
   createdAt: string;
   items: OrderItem[];
+  returnReason?: string;
+  returnRequestAt?: string;
+  returnRejectReason?: string;
 }
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('');
+  const [selectedReason, setSelectedReason] =
+  useState<string | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -76,14 +81,110 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const approveReturn = async (
+  orderId: number
+) => {
+  try {
+    await apiService.admin.approveReturn(
+      orderId
+    );
+
+    toast.success(
+      'Đã duyệt trả hàng'
+    );
+
+    fetchOrders();
+  } catch {
+    toast.error(
+      'Không thể duyệt trả hàng'
+    );
+  }
+};
+
+const rejectReturn = async (
+  orderId: number
+) => {
+  try {
+    await apiService.admin.rejectReturn(
+      orderId
+    );
+
+    toast.success(
+      'Đã từ chối trả hàng'
+    );
+
+    fetchOrders();
+  } catch {
+    toast.error(
+      'Không thể từ chối'
+    );
+  }
+};
+
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'PENDING': return <div className="badge badge-warning">Chờ xác nhận</div>;
-      case 'CONFIRMED': return <div className="badge badge-info">Đã xác nhận</div>;
-      case 'SHIPPING': return <div className="badge badge-primary">Đang giao</div>;
-      case 'DELIVERED': return <div className="badge badge-success">Đã giao</div>;
-      case 'CANCELLED': return <div className="badge badge-error">Đã hủy</div>;
-      default: return <div className="badge">{status}</div>;
+      case 'PENDING':
+        return (
+          <div className="badge badge-warning">
+            Chờ xác nhận
+          </div>
+        );
+
+      case 'CONFIRMED':
+        return (
+          <div className="badge badge-info">
+            Đã xác nhận
+          </div>
+        );
+
+      case 'SHIPPING':
+        return (
+          <div className="badge badge-primary">
+            Đang giao
+          </div>
+        );
+
+      case 'DELIVERED':
+        return (
+          <div className="badge badge-success">
+            Đã giao
+          </div>
+        );
+
+      case 'CANCELLED':
+        return (
+          <div className="badge badge-error">
+            Đã hủy
+          </div>
+        );
+
+      case 'RETURN_REQUESTED':
+        return (
+          <div className="badge badge-warning">
+            Chờ trả hàng
+          </div>
+        );
+
+      case 'RETURNED':
+        return (
+          <div className="badge badge-success">
+            Đã trả hàng
+          </div>
+        );
+
+      case 'RETURN_REJECTED':
+        return (
+          <div className="badge badge-error">
+            Từ chối trả hàng
+          </div>
+        );
+
+      default:
+        return (
+          <div className="badge">
+            {status}
+          </div>
+        );
     }
   };
 
@@ -103,6 +204,17 @@ export default function AdminOrdersPage() {
           <option value="SHIPPING">Đang giao</option>
           <option value="DELIVERED">Đã giao</option>
           <option value="CANCELLED">Đã hủy</option>
+          <option value="RETURN_REQUESTED">
+            Chờ trả hàng
+          </option>
+
+          <option value="RETURNED">
+            Đã trả hàng
+          </option>
+
+          <option value="RETURN_REJECTED">
+            Từ chối trả hàng
+          </option>
         </select>
       </div>
 
@@ -131,6 +243,18 @@ export default function AdminOrdersPage() {
                     <div>
                       <p className="font-medium">{order.user.name}</p>
                       <p className="text-xs text-gray-500">{order.user.email}</p>
+                      {order.status === 'RETURN_REQUESTED' &&
+                        order.returnRequestAt && (
+                          <p className="text-xs text-warning mt-1">
+                            Yêu cầu lúc:
+                            {' '}
+                            {format(
+                              new Date(order.returnRequestAt),
+                              'dd/MM/yyyy HH:mm',
+                              { locale: vi }
+                            )}
+                          </p>
+                      )}
                     </div>
                   </td>
                   <td>
@@ -141,18 +265,95 @@ export default function AdminOrdersPage() {
                   </td>
                   <td>{getStatusBadge(order.status)}</td>
                   <td>
-                    <div className="flex gap-2">
-                      <select 
-                        className="select select-bordered select-sm"
-                        value={order.status}
-                        onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                      >
-                        <option value="PENDING">Chờ</option>
-                        <option value="CONFIRMED">Xác nhận</option>
-                        <option value="SHIPPING">Đang giao</option>
-                        <option value="DELIVERED">Đã giao</option>
-                        <option value="CANCELLED">Hủy</option>
-                      </select>
+                    <div className="flex flex-wrap gap-2">
+                      {order.status === 'PENDING' && (
+  <>
+    <button
+      className="btn btn-success btn-sm"
+      onClick={() =>
+        updateOrderStatus(
+          order.id,
+          'CONFIRMED'
+        )
+      }
+    >
+      Xác nhận
+    </button>
+
+    <button
+      className="btn btn-error btn-sm"
+      onClick={() =>
+        updateOrderStatus(
+          order.id,
+          'CANCELLED'
+        )
+      }
+    >
+      Hủy
+    </button>
+  </>
+)}
+{order.status === 'CONFIRMED' && (
+  <button
+    className="btn btn-primary btn-sm"
+    onClick={() =>
+      updateOrderStatus(
+        order.id,
+        'SHIPPING'
+      )
+    }
+  >
+    Đang giao
+  </button>
+)}
+{order.status === 'SHIPPING' && (
+  <button
+    className="btn btn-success btn-sm"
+    onClick={() =>
+      updateOrderStatus(
+        order.id,
+        'DELIVERED'
+      )
+    }
+  >
+    Đã giao
+  </button>
+)}
+{order.status === 'RETURN_REQUESTED' && (
+  <>
+    <button
+      className="btn btn-success btn-sm"
+      onClick={() =>
+        approveReturn(order.id)
+      }
+    >
+      Duyệt trả hàng
+    </button>
+
+    <button
+      className="btn btn-error btn-sm"
+      onClick={() =>
+        rejectReturn(order.id)
+      }
+    >
+      Từ chối
+    </button>
+  </>
+)}
+
+{order.status === 'RETURN_REQUESTED' && (
+  <button
+    className="btn btn-info btn-sm"
+    onClick={() =>
+      setSelectedReason(
+        order.returnReason || ''
+      )
+    }
+  >
+    Xem lý do
+  </button>
+)}
+                      
                     </div>
                   </td>
                 </tr>
@@ -165,6 +366,34 @@ export default function AdminOrdersPage() {
       {orders.length === 0 && !loading && (
         <div className="text-center py-20 text-xl">Không có đơn hàng nào</div>
       )}
+
+      {selectedReason !== null && (
+  <dialog className="modal modal-open">
+    <div className="modal-box">
+      <h3 className="font-bold text-lg mb-4">
+        Lý do trả hàng
+      </h3>
+
+      <div className="bg-base-200 rounded-lg p-4">
+        {selectedReason}
+      </div>
+
+      <div className="modal-action">
+        <button
+          className="btn"
+          onClick={() =>
+            setSelectedReason(null)
+          }
+        >
+          Đóng
+        </button>
+      </div>
+    </div>
+  </dialog>
+)}
     </div>
   );
+  
+
+
 }

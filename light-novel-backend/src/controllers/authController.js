@@ -37,7 +37,7 @@ const register = async (req, res) => {
 
     const user = await prisma.user.create({
       data: { name, email, password: hashedPassword },
-      select: { id: true, name: true, email: true, role: true, avatar: true }
+      select: { id: true, name: true, email: true, role: true, avatar: true, phone: true, address: true }
     });
 
     const { accessToken, refreshToken } = generateTokens(user);
@@ -59,7 +59,7 @@ const login = async (req, res) => {
 
     const user = await prisma.user.findUnique({ 
       where: { email },
-      select: { id: true, name: true, email: true, role: true, avatar: true, password: true }
+      select: { id: true, name: true, email: true, role: true, phone: true, address: true, avatar: true, password: true }
     });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {

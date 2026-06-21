@@ -114,10 +114,17 @@ model Order {
   shippingAddress String?
   note            String?
 
+  deliveredAt     DateTime?
+
+  returnReason    String?
+  returnRequestAt DateTime?
+  returnRejectReason String?
+
   user      User        @relation(fields: [userId], references: [id])
   items     OrderItem[]
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model OrderItem {
@@ -168,11 +175,15 @@ enum BookStatus {
 }
 
 enum OrderStatus {
-  PENDING
-  CONFIRMED
-  SHIPPING
-  DELIVERED
-  CANCELLED
+  PENDING              // Chờ xác nhận
+  CONFIRMED            // Đã xác nhận
+  SHIPPING             // Đang giao
+  DELIVERED            // Đã giao
+  CANCELLED            // Đã hủy
+
+  RETURN_REQUESTED     // Chờ trả hàng
+  RETURNED             // Đã trả hàng
+  RETURN_REJECTED      // Từ chối trả hàng
 }
 
 enum BehaviorAction {

@@ -15,6 +15,7 @@ export default function CheckoutPage() {
   const router = useRouter();
 
   const [shippingAddress, setShippingAddress] = useState(user?.address || '');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'bank'>('bank');
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,11 +27,44 @@ export default function CheckoutPage() {
     if (items.length === 0) router.push('/cart');
   }, [items, router]);
 
-  const handlePlaceOrder = async () => {
-    if (!shippingAddress.trim()) {
-      toast.error("Vui lòng nhập địa chỉ giao hàng");
-      return;
+  useEffect(() => {
+    if (user) {
+      setShippingAddress(
+        user.address || ''
+      );
+
+      setPhone(
+        user.phone || ''
+      );
     }
+  }, [user]);
+
+  const handlePlaceOrder = async () => {
+    if (!phone.trim()) {
+  toast.error(
+    'Vui lòng nhập số điện thoại'
+  );
+  return;
+}
+
+if (!shippingAddress.trim()) {
+  toast.error(
+    'Vui lòng nhập địa chỉ giao hàng'
+  );
+  return;
+}if (!phone.trim()) {
+  toast.error(
+    'Vui lòng nhập số điện thoại'
+  );
+  return;
+}
+
+if (!shippingAddress.trim()) {
+  toast.error(
+    'Vui lòng nhập địa chỉ giao hàng'
+  );
+  return;
+}
 
     setLoading(true);
 
@@ -102,6 +136,26 @@ export default function CheckoutPage() {
                       disabled 
                     />
                   </div>
+                  <div>
+  <label className="label">
+    <span className="label-text font-medium">
+      Số điện thoại
+      <span className="text-red-500">
+        *
+      </span>
+    </span>
+  </label>
+
+  <input
+    type="text"
+    value={phone}
+    onChange={(e) =>
+      setPhone(e.target.value)
+    }
+    className="input input-bordered w-full"
+    placeholder="Nhập số điện thoại"
+  />
+</div>
                   <div>
                     <label className="label">
                       <span className="label-text font-medium text-base-content">
@@ -177,7 +231,7 @@ export default function CheckoutPage() {
                 {!showQR ? (
                   <button 
                     onClick={handlePlaceOrder}
-                    disabled={loading || !shippingAddress.trim()}
+                    disabled={loading || !phone.trim() ||  !shippingAddress.trim()}
                     className="btn btn-primary w-full mt-8 btn-lg"
                   >
                     {loading ? "Đang xử lý..." : "Tạo đơn hàng"}
